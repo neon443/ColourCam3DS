@@ -33,7 +33,7 @@ void writePicToFBuff(void *fb, void *img, u16 x, u16 y) {
 			uint8_t g = ((data >> 5) & 0x3F) << 2;
 			uint8_t r = (data & 0x1F) << 3;
 
-			if(((j>110 && j<130) && (i>198 && i<202)) || ((i>190 && i<210) && (j>118 && j<122)) && !(j == 120 && i == 200)) {
+			if((((j>110 && j<130) && (i>198 && i<202)) || ((i>190 && i<210) && (j>118 && j<122))) && !(j == 120 && i == 200)) {
 				fb_8[v] = 200;
 				fb_8[v+1] = 200;
 				fb_8[v+2] = 200;
@@ -72,7 +72,6 @@ void takePicture(u8 *buf) {
 	printf("CAMU_SetReceiving: 0x%08X\n", (unsigned int) CAMU_SetReceiving(&camReceiveEvent2, buf + SCREENSIZE, PORT_CAM2, SCREENSIZE, (s16) bufSize));
 	printf("svcWaitSynchronization: 0x%08X\n", (unsigned int) svcWaitSynchronization(camReceiveEvent, WAIT_TIMEOUT));
 	printf("svcWaitSynchronization: 0x%08X\n", (unsigned int) svcWaitSynchronization(camReceiveEvent2, WAIT_TIMEOUT));
-	printf("CAMU_PlayShutterSound: 0x%08X\n", (unsigned int) CAMU_PlayShutterSound(SHUTTER_SOUND_TYPE_NORMAL));
 
 	printf("CAMU_StopCapture: 0x%08X\n", (unsigned int) CAMU_StopCapture(PORT_BOTH));
 
@@ -83,6 +82,7 @@ void takePicture(u8 *buf) {
 }
 
 void getColor(void *fb, int row, int col) {
+	printf("CAMU_PlayShutterSound: 0x%08X\n", (unsigned int) CAMU_PlayShutterSound(SHUTTER_SOUND_TYPE_NORMAL));
 	u8 *fb_8 = (u8*) fb;
 	u32 v = ((HEIGHT - col) + (row*HEIGHT)) * 3;
 	uint8_t r = fb_8[v];
@@ -119,8 +119,8 @@ int main(int argc, char* argv[])
 	{
 		hidScanInput();
 
-takePicture(buf);
-writePicToFBuff(gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL), buf, 0, 0);
+		takePicture(buf);
+		writePicToFBuff(gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL), buf, 0, 0);
 
 		// Your code goes here
 		u32 kDown = hidKeysDown();
