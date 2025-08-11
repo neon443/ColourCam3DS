@@ -4,17 +4,6 @@
 #include <string.h>
 #include <3ds.h>
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <malloc.h>
-#include <setjmp.h>
-#include <3ds.h>
-#include <sys/dirent.h>
-#include <sys/errno.h>
-#include <sys/unistd.h>
-#include <stdbool.h>
-
 #define WIDTH 400
 #define HEIGHT 240
 #define SCREENSIZE WIDTH * HEIGHT * 2
@@ -35,7 +24,7 @@ void writePicToFBuff(void *fb, void *img, u16 x, u16 y) {
 	u16 *img_16 = (u16*) img;
 	int i, j, drawx, drawy;
 	for(j = 0; j < HEIGHT; j++) {
-		for(i = 0; i < HEIGHT; i++) {
+		for(i = 0; i < WIDTH; i++) {
 			drawy = y + HEIGHT - j;
 			drawx = x + i;
 			u32 v = (drawy + drawx * HEIGHT) * 3;
@@ -124,7 +113,7 @@ int main(int argc, char* argv[])
 
 		// Your code goes here
 		u32 kDown = hidKeysDown();
-		if (kDown & KEY_START) {
+		if (kDown & KEY_R) {
 			printf("start presed\n");
 			buf = flushBuffs(buf);
 			gfxFlushBuffers();
@@ -135,7 +124,7 @@ int main(int argc, char* argv[])
 			takePicture(buf);
 			// break; // break in order to return to hbmenu
 		}
-		
+
 		gfxSet3D(false);
 		writePicToFBuff(gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL), buf, 0, 0);
 		getColor(gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL), 100, 120);
