@@ -46,6 +46,7 @@ int main(int argc, char* argv[])
 		// Your code goes here
 		u32 kDown = hidKeysDown();
 		if (kDown & KEY_START) {
+			printf("start presed\n");
 			flushBuffs(buf);
 			gfxFlushBuffers();
 			gspWaitForVBlank();
