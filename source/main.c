@@ -91,7 +91,7 @@ void getColor(void *fb, int row, int col) {
 	uint8_t r = fb_8[v];
 	uint8_t g = fb_8[v+1];
 	uint8_t b = fb_8[v+2];
-	printf("\n---RGB2---%u %u %u\n", r, g, b);
+	printf("\n---RGB--- %u %u %u\n", r, g, b);
 }
 
 int main(int argc, char* argv[])
@@ -135,9 +135,11 @@ int main(int argc, char* argv[])
 			takePicture(buf);
 			// break; // break in order to return to hbmenu
 		}
-
+		
 		gfxSet3D(false);
 		writePicToFBuff(gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL), buf, 0, 0);
+		getColor(gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL), 100, 120);
+
 		gfxFlushBuffers();
 		gspWaitForVBlank();
 		gfxSwapBuffers();
