@@ -3,12 +3,24 @@
 #include <string.h>
 #include <3ds.h>
 
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <malloc.h>
+#include <setjmp.h>
+#include <3ds.h>
+#include <sys/dirent.h>
+#include <sys/errno.h>
+#include <sys/unistd.h>
+#include <stdbool.h>
+
 #define WIDTH 400
 #define HEIGHT 240
 #define SCREENSIZE WIDTH * HEIGHT * 2
 #define BUFSIZE SCREENSIZE * 2
+#define WAIT_TIMEOUT 300000000ULL
 
-inline void clearScreen(void) {
+void clearScreen(void) {
 	u8 *frame = gfxGetFramebuffer(GFX_BOTTOM, GFX_LEFT, NULL, NULL);
 	memset(frame, 0, 320 * 240 * 3);
 }
@@ -25,6 +37,35 @@ void writePicToFBuff(void *fb, void *img, u16 x, u16 y) {
 void flushBuffs(u8 *buf) {
 	free(buf);
 	buf = malloc(BUFSIZE);
+}
+
+void takePicture(u8 *buf) {
+	u32 bufSize;
+	CAMU_GetMaxBytes(&bufSize, WIDTH, HEIGHT);
+	CAMU_SetTransferBytes(PORT_BOTH, bufSize, WIDTH, HEIGHT);
+
+	CAMU_Activate(SELECT_OUT1_OUT2);
+
+	Handle camReceiveEvent = 0;
+	Handle camReceiveEvent2 = 0;
+
+	CAMU_ClearBuffer(PORT_BOTH);
+	CAMU_SynchronizeVsyncTiming(SELECT_OUT1, SELECT_OUT2);
+
+	CAMU_StartCapture(PORT_BOTH);
+
+	CAMU_SetReceiving(&camReceiveEvent, buf, PORT_CAM1, SCREENSIZE, (s16) bufSize);
+	CAMU_SetReceiving(&camReceiveEvent2, buf + SCREENSIZE, PORT_CAM2, SCREENSIZE, (s16) bufSize);
+	svcWaitSynchronization(camReceiveEvent, WAIT_TIMEOUT);
+	svcWaitSynchronization(camReceiveEvent2, WAIT_TIMEOUT);
+	CAMU_PlayShutterSound(SHUTTER_SOUND_TYPE_NORMAL);
+
+	CAMU_StopCapture(PORT_BOTH);
+
+	svcCloseHandle(camReceiveEvent);
+	svcCloseHandle(camReceiveEvent2);
+
+	CAMU_Activate(SELECT_NONE);
 }
 
 int main(int argc, char* argv[])
@@ -51,7 +92,7 @@ int main(int argc, char* argv[])
 			gfxFlushBuffers();
 			gspWaitForVBlank();
 			gfxSwapBuffers();
-			// clearScreen();
+			clearScreen();
 			// break; // break in order to return to hbmenu
 		}
 	}
