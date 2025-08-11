@@ -8,7 +8,7 @@
 #define HEIGHT 240
 #define SCREENSIZE WIDTH * HEIGHT * 2
 #define BUFSIZE SCREENSIZE * 2
-#define WAIT_TIMEOUT 300000000ULL
+#define WAIT_TIMEOUT 100000000ULL
 
 void clearScreen(void) {
 	u8 *frame = gfxGetFramebuffer(GFX_BOTTOM, GFX_LEFT, NULL, NULL);
@@ -55,34 +55,34 @@ u8* flushBuffs(u8 *buf) {
 
 void takePicture(u8 *buf) {
 	u32 bufSize;
-	printf("CAMU_GetMaxBytes: 0x%08X\n", (unsigned int) CAMU_GetMaxBytes(&bufSize, WIDTH, HEIGHT));
-	printf("CAMU_SetTransferBytes: 0x%08X\n", (unsigned int) CAMU_SetTransferBytes(PORT_BOTH, bufSize, WIDTH, HEIGHT));
+	CAMU_GetMaxBytes(&bufSize, WIDTH, HEIGHT);
+	CAMU_SetTransferBytes(PORT_BOTH, bufSize, WIDTH, HEIGHT);
 
-	printf("CAMU_Activate: 0x%08X\n", (unsigned int) CAMU_Activate(SELECT_OUT1_OUT2));
+	CAMU_Activate(SELECT_OUT1_OUT2);
 
 	Handle camReceiveEvent = 0;
 	Handle camReceiveEvent2 = 0;
 
-	printf("CAMU_ClearBuffer: 0x%08X\n", (unsigned int) CAMU_ClearBuffer(PORT_BOTH));
-	printf("CAMU_SynchronizeVsyncTiming: 0x%08X\n", (unsigned int) CAMU_SynchronizeVsyncTiming(SELECT_OUT1, SELECT_OUT2));
+	CAMU_ClearBuffer(PORT_BOTH);
+	CAMU_SynchronizeVsyncTiming(SELECT_OUT1, SELECT_OUT2);
 
-	printf("CAMU_StartCapture: 0x%08X\n", (unsigned int) CAMU_StartCapture(PORT_BOTH));
+	CAMU_StartCapture(PORT_BOTH);
 
-	printf("CAMU_SetReceiving: 0x%08X\n", (unsigned int) CAMU_SetReceiving(&camReceiveEvent, buf, PORT_CAM1, SCREENSIZE, (s16) bufSize));
-	printf("CAMU_SetReceiving: 0x%08X\n", (unsigned int) CAMU_SetReceiving(&camReceiveEvent2, buf + SCREENSIZE, PORT_CAM2, SCREENSIZE, (s16) bufSize));
-	printf("svcWaitSynchronization: 0x%08X\n", (unsigned int) svcWaitSynchronization(camReceiveEvent, WAIT_TIMEOUT));
-	printf("svcWaitSynchronization: 0x%08X\n", (unsigned int) svcWaitSynchronization(camReceiveEvent2, WAIT_TIMEOUT));
+	CAMU_SetReceiving(&camReceiveEvent, buf, PORT_CAM1, SCREENSIZE, (s16) bufSize);
+	CAMU_SetReceiving(&camReceiveEvent2, buf + SCREENSIZE, PORT_CAM2, SCREENSIZE, (s16) bufSize);
+	svcWaitSynchronization(camReceiveEvent, WAIT_TIMEOUT);
+	svcWaitSynchronization(camReceiveEvent2, WAIT_TIMEOUT);
 
-	printf("CAMU_StopCapture: 0x%08X\n", (unsigned int) CAMU_StopCapture(PORT_BOTH));
+	CAMU_StopCapture(PORT_BOTH);
 
 	svcCloseHandle(camReceiveEvent);
 	svcCloseHandle(camReceiveEvent2);
 
-	printf("CAMU_Activate: 0x%08X\n", (unsigned int) CAMU_Activate(SELECT_NONE));
+	CAMU_Activate(SELECT_NONE);
 }
 
 void getColor(void *fb, int row, int col) {
-	printf("CAMU_PlayShutterSound: 0x%08X\n", (unsigned int) CAMU_PlayShutterSound(SHUTTER_SOUND_TYPE_NORMAL));
+	CAMU_PlayShutterSound(SHUTTER_SOUND_TYPE_NORMAL);
 	u8 *fb_8 = (u8*) fb;
 	u32 v = ((HEIGHT - col) + (row*HEIGHT)) * 3;
 	uint8_t r = fb_8[v];
@@ -102,6 +102,8 @@ int main(int argc, char* argv[])
 
 	CAMU_SetSize(SELECT_OUT1_OUT2, SIZE_CTR_TOP_LCD, CONTEXT_A);
 	CAMU_SetOutputFormat(SELECT_OUT1_OUT2, OUTPUT_RGB_565, CONTEXT_A);
+	
+	CAMU_SetFrameRate(SELECT_OUT1_OUT2, FRAME_RATE_30);
 
 	CAMU_SetNoiseFilter(SELECT_OUT1_OUT2, true);
 	CAMU_SetAutoExposure(SELECT_OUT1_OUT2, true);
@@ -112,20 +114,82 @@ int main(int argc, char* argv[])
 	CAMU_SetTrimming(PORT_CAM2, false);
 	//printf("CAMU_SetTrimmingParamsCenter: 0x%08X\n", (unsigned int) CAMU_SetTrimmingParamsCenter(PORT_CAM1, 512, 240, 512, 384));
 
-	printf("Hello, world!\n");
+	u32 bufSize;
+	CAMU_GetMaxBytes(&bufSize, WIDTH, HEIGHT);
+	CAMU_SetTransferBytes(PORT_BOTH, bufSize, WIDTH, HEIGHT);
+
+	CAMU_Activate(SELECT_OUT1_OUT2);
+
+	Handle camReceiveEvent[4] = {0};
+	bool captureInterrupted = false;
+	s32 index = 0;
+
+	// events 0 and 1 for interruption
+	CAMU_GetBufferErrorInterruptEvent(&camReceiveEvent[0], PORT_CAM1);
+	CAMU_GetBufferErrorInterruptEvent(&camReceiveEvent[1], PORT_CAM2);
+
+	CAMU_ClearBuffer(PORT_BOTH);
+	CAMU_SynchronizeVsyncTiming(SELECT_OUT1, SELECT_OUT2);
+
+	CAMU_StartCapture(PORT_BOTH);
+
+	printf("Welcome to Colour Cam!\n");
 
 	// Main loop
 	while (aptMainLoop())
 	{
-		hidScanInput();
+		if (!captureInterrupted) {
+			// Read which buttons are currently pressed or not
+			hidScanInput();
+			hidKeysDown();
+		}
 
-		takePicture(buf);
+		// events 2 and 3 for capture
+		if (camReceiveEvent[2] == 0) {
+			CAMU_SetReceiving(&camReceiveEvent[2], buf, PORT_CAM1, SCREENSIZE, (s16)bufSize);
+		}
+		if (camReceiveEvent[3] == 0) {
+			CAMU_SetReceiving(&camReceiveEvent[3], buf + SCREENSIZE, PORT_CAM2, SCREENSIZE, (s16)bufSize);
+		}
+
+		if (captureInterrupted) {
+			CAMU_StartCapture(PORT_BOTH);
+			captureInterrupted = false;
+		}
+
+		svcWaitSynchronizationN(&index, camReceiveEvent, 4, false, WAIT_TIMEOUT);
+		switch (index) {
+		case 0:
+			svcCloseHandle(camReceiveEvent[2]);
+			camReceiveEvent[2] = 0;
+
+			captureInterrupted = true;
+			continue; //skip screen update
+			break;
+		case 1:
+			svcCloseHandle(camReceiveEvent[3]);
+			camReceiveEvent[3] = 0;
+
+			captureInterrupted = true;
+			continue; //skip screen update
+			break;
+		case 2:
+			svcCloseHandle(camReceiveEvent[2]);
+			camReceiveEvent[2] = 0;
+			break;
+		case 3:
+			svcCloseHandle(camReceiveEvent[3]);
+			camReceiveEvent[3] = 0;
+			break;
+		default:
+			break;
+		}
+
 		writePicToFBuff(gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL), buf, 0, 0);
 
 		// Your code goes here
 		u32 kDown = hidKeysDown();
 		if (kDown & KEY_R) {
-			printf("start presed\n");
 			buf = flushBuffs(buf);
 			gfxFlushBuffers();
 
@@ -146,6 +210,9 @@ int main(int argc, char* argv[])
 		gspWaitForVBlank();
 		gfxSwapBuffers();
 	}
+
+	CAMU_StopCapture(PORT_BOTH);
+
 
 	free(buf);
 
