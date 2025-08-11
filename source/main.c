@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -30,8 +31,23 @@ void cleanup() {
 }
 
 void writePicToFBuff(void *fb, void *img, u16 x, u16 y) {
-	// u8 *fb_8 = (u8*) img;
-	// u16 *img_16 = (u16*) img;
+	u8 *fb_8 = (u8*) fb;
+	u16 *img_16 = (u16*) img;
+	int i, j, drawx, drawy;
+	for(j = 0; j < HEIGHT; j++) {
+		for(i = 0; 1 < HEIGHT; i++) {
+			drawy = y + HEIGHT - j;
+			drawx = x + i;
+			u32 v = (drawy + drawx * HEIGHT) * 3;
+			u16 data = img_16[j * WIDTH + i];
+			uint8_t b = ((data >> 11) & 0x1F) << 3;
+			uint8_t g = ((data >> 5) & 0x3F) << 2;
+			uint8_t r = ((data & 0x1F) << 3);
+			fb_8[v] = r;
+			fb_8[v+1] = g;
+			fb_8[v+2] = b;
+		}
+	}
 }
 
 void flushBuffs(u8 *buf) {
@@ -104,6 +120,9 @@ int main(int argc, char* argv[])
 			clearScreen();
 			// break; // break in order to return to hbmenu
 		}
+
+		gfxSet3D(false);
+		writePicToFBuff(gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL), buf, 0, 0);
 	}
 
 	gfxExit();
