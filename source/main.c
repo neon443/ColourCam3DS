@@ -119,6 +119,9 @@ int main(int argc, char* argv[])
 	{
 		hidScanInput();
 
+takePicture(buf);
+writePicToFBuff(gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL), buf, 0, 0);
+
 		// Your code goes here
 		u32 kDown = hidKeysDown();
 		if (kDown & KEY_R) {
@@ -129,13 +132,15 @@ int main(int argc, char* argv[])
 			gspWaitForVBlank();
 			gfxSwapBuffers();
 
-			takePicture(buf);
+
+			getColor(gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL), 200, 120);
 			// break; // break in order to return to hbmenu
 		}
 
 		gfxSet3D(false);
-		writePicToFBuff(gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL), buf, 0, 0);
-		getColor(gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL), 200, 120);
+		// writePicToFBuff(gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL), buf, 0, 0);
+
+		// takePicture(buf);
 
 		gfxFlushBuffers();
 		gspWaitForVBlank();
