@@ -56,15 +56,23 @@ void writePictureToFramebufferRGB565(void *fb, void *img, u16 x, u16 y, u16 widt
 			uint8_t b = ((data >> 11) & 0x1F) << 3;
 			uint8_t g = ((data >> 5) & 0x3F) << 2;
 			uint8_t r = (data & 0x1F) << 3;
-			if ((j == 120) && (i == 200)) {
-				printf("\n-----RGB----- %08X %08X %08X\n", r, g, b);
-				printf("\n-----RGB2----- %u %u %u\n", r, g, b);
+			if ((j == 100) && (i == 170)) {
+				printf("\n---RGB--- %u %u %u\n", r, g, b);
 			} 
 			fb_8[v] = r;
 			fb_8[v+1] = g;
 			fb_8[v+2] = b;
 		}
 	}
+}
+
+void getColor(void *fb, int row, int col) {
+	u8 *fb_8 = (u8*) fb;
+	u32 v = ((HEIGHT - col) + (row*HEIGHT)) * 3;
+	uint8_t r = fb_8[v];
+	uint8_t g = fb_8[v+1];
+	uint8_t b = fb_8[v+2];
+	printf("\n---RGB2---%u %u %u\n", r, g, b);
 }
 
 // TODO: Figure out how to use CAMU_GetStereoCameraCalibrationData
@@ -178,6 +186,8 @@ int main() {
 			gfxSet3D(false);
 			writePictureToFramebufferRGB565(gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL), buf, 0, 0, WIDTH, HEIGHT);
 		}
+
+		getColor(gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL), 170, 100);
 
 		// Flush and swap framebuffers
 		gfxFlushBuffers();
