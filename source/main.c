@@ -120,19 +120,21 @@ int main(int argc, char* argv[])
 	while (aptMainLoop())
 	{
 		hidScanInput();
-		
+
 		// Your code goes here
 		u32 kDown = hidKeysDown();
 		if (kDown & KEY_START) {
 			printf("start presed\n");
-			takePicture(buf);
 			flushBuffs(buf);
 			gfxFlushBuffers();
+
 			gspWaitForVBlank();
 			gfxSwapBuffers();
+
+			takePicture(buf);
 			// break; // break in order to return to hbmenu
 		}
-		
+
 		gfxSet3D(false);
 		writePicToFBuff(gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL), buf, 0, 0);
 		gfxFlushBuffers();
