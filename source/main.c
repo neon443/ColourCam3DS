@@ -35,14 +35,14 @@ void writePicToFBuff(void *fb, void *img, u16 x, u16 y) {
 	u16 *img_16 = (u16*) img;
 	int i, j, drawx, drawy;
 	for(j = 0; j < HEIGHT; j++) {
-		for(i = 0; 1 < HEIGHT; i++) {
+		for(i = 0; i < HEIGHT; i++) {
 			drawy = y + HEIGHT - j;
 			drawx = x + i;
 			u32 v = (drawy + drawx * HEIGHT) * 3;
 			u16 data = img_16[j * WIDTH + i];
 			uint8_t b = ((data >> 11) & 0x1F) << 3;
 			uint8_t g = ((data >> 5) & 0x3F) << 2;
-			uint8_t r = ((data & 0x1F) << 3);
+			uint8_t r = (data & 0x1F) << 3;
 			fb_8[v] = r;
 			fb_8[v+1] = g;
 			fb_8[v+2] = b;
@@ -99,6 +99,21 @@ int main(int argc, char* argv[])
 
 	gfxInitDefault();
 	consoleInit(GFX_TOP, NULL);
+
+	camInit();
+
+	CAMU_SetSize(SELECT_OUT1_OUT2, SIZE_CTR_TOP_LCD, CONTEXT_A);
+	CAMU_SetOutputFormat(SELECT_OUT1_OUT2, OUTPUT_RGB_565, CONTEXT_A);
+
+	CAMU_SetNoiseFilter(SELECT_OUT1_OUT2, true);
+	CAMU_SetAutoExposure(SELECT_OUT1_OUT2, true);
+	CAMU_SetAutoWhiteBalance(SELECT_OUT1_OUT2, true);
+	//printf("CAMU_SetEffect: 0x%08X\n", (unsigned int) CAMU_SetEffect(SELECT_OUT1_OUT2, EFFECT_MONO, CONTEXT_A));
+
+	CAMU_SetTrimming(PORT_CAM1, false);
+	CAMU_SetTrimming(PORT_CAM2, false);
+	//printf("CAMU_SetTrimmingParamsCenter: 0x%08X\n", (unsigned int) CAMU_SetTrimmingParamsCenter(PORT_CAM1, 512, 240, 512, 384));
+
 
 	printf("Hello, world!\n");
 
