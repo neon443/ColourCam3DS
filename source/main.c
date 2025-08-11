@@ -50,9 +50,10 @@ void writePicToFBuff(void *fb, void *img, u16 x, u16 y) {
 	}
 }
 
-void flushBuffs(u8 *buf) {
+u8* flushBuffs(u8 *buf) {
 	free(buf);
 	buf = malloc(BUFSIZE);
+	return buf;
 }
 
 void takePicture(u8 *buf) {
@@ -125,7 +126,7 @@ int main(int argc, char* argv[])
 		u32 kDown = hidKeysDown();
 		if (kDown & KEY_START) {
 			printf("start presed\n");
-			flushBuffs(buf);
+			buf = flushBuffs(buf);
 			gfxFlushBuffers();
 
 			gspWaitForVBlank();
