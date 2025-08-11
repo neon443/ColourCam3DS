@@ -68,6 +68,15 @@ void takePicture(u8 *buf) {
 	CAMU_Activate(SELECT_NONE);
 }
 
+void getColor(void *fb, int row, int col) {
+	u8 *fb_8 = (u8*) fb;
+	u32 v = ((HEIGHT - col) + (row*HEIGHT)) * 3;
+	uint8_t r = fb_8[v];
+	uint8_t g = fb_8[v+1];
+	uint8_t b = fb_8[v+2];
+	printf("\n---RGB2---%u %u %u\n", r, g, b);
+}
+
 int main(int argc, char* argv[])
 {
 	u8 *buf = malloc(BUFSIZE);
