@@ -189,13 +189,15 @@ int main(int argc, char* argv[])
 
 		// Your code goes here
 		u32 kDown = hidKeysDown();
+		if(kDown & KEY_START) {
+			break;
+		}
 		if (kDown & KEY_R) {
 			buf = flushBuffs(buf);
 			gfxFlushBuffers();
 
 			gspWaitForVBlank();
 			gfxSwapBuffers();
-
 
 			getColor(gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL), 200, 120);
 			// break; // break in order to return to hbmenu
