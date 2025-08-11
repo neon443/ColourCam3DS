@@ -32,6 +32,14 @@ void writePicToFBuff(void *fb, void *img, u16 x, u16 y) {
 			uint8_t b = ((data >> 11) & 0x1F) << 3;
 			uint8_t g = ((data >> 5) & 0x3F) << 2;
 			uint8_t r = (data & 0x1F) << 3;
+
+			if(((j>110 && j<130) && (i>198 && i<202)) || ((i>190 && i<210) && (j>118 && j<122))) {
+				fb_8[v] = 200;
+				fb_8[v+1] = 200;
+				fb_8[v+2] = 200;
+				continue;
+			}
+
 			fb_8[v] = r;
 			fb_8[v+1] = g;
 			fb_8[v+2] = b;
@@ -127,7 +135,7 @@ int main(int argc, char* argv[])
 
 		gfxSet3D(false);
 		writePicToFBuff(gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL), buf, 0, 0);
-		getColor(gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL), 100, 120);
+		getColor(gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL), 200, 120);
 
 		gfxFlushBuffers();
 		gspWaitForVBlank();
