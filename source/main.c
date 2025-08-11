@@ -17,9 +17,9 @@ void cleanup() {
 
 }
 
-void writePicToFBuff(void *fb, void *img, u16 x, u16 y, u16 WIDTH, u16 HEIGHT) {
-	u8 *fb_8 = (u8*) img;
-	u16 *img_16 = (u16*) img;
+void writePicToFBuff(void *fb, void *img, u16 x, u16 y) {
+	// u8 *fb_8 = (u8*) img;
+	// u16 *img_16 = (u16*) img;
 }
 
 void flushBuffs(u8 *buf) {
@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
 			gfxFlushBuffers();
 			gspWaitForVBlank();
 			gfxSwapBuffers();
-			clearScreen();
+			// clearScreen();
 			// break; // break in order to return to hbmenu
 		}
 	}
