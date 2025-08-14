@@ -11,18 +11,16 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    container:
+      image: devkitpro/devkitarm
+      
     steps:
     - uses: actions/checkout@v4
 
-    - name: install devkitpro
-      run: wget https://apt.devkitpro.org/install-devkitpro-pacman
-          chmod +x ./install-devkitpro-pacman
-          sudo ./install-devkitpro-pacman
-          sudo dkp-pacman -S 3ds-dev
-          sudo pacman -S 3ds-dev
-
-    - name: configure
-      run: ./configure
+    steps:
+      run: |
+        echo "DEVKITPRO=/opt/devkitpro" >> $GITHUB_ENV
+        echo "PATH=$DEVKITPRO/devkitARM/bin:$PATH" >> $GITHUB_ENV
 
     - name: Install dependencies
       run: make
